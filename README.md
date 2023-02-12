@@ -1,2 +1,2 @@
 # Pico Fighting Board TURBO
-Forked [FeralAI/PicoFightingBoard](https://github.com/FeralAI/PicoFightingBoard)
+Forked from [FeralAI/PicoFightingBoard](https://github.com/FeralAI/PicoFightingBoard)
