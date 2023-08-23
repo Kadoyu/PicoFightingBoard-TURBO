@@ -6,14 +6,14 @@
 #ifndef PICO_BOARD_CONFIG_H_
 #define PICO_BOARD_CONFIG_H_
 
-#include <GamepadEnums.h>
+#include "enums.pb.h"
 
 // This is the main pin definition section.
 // This will let you specify which GPIO pin each button is assigned too.
 // You can set any of the main pins as `-1` to disable it.
 // The Turbo pin and LS + RS slider pins can also be set to `-1` to disable that functionality.
 // Please note that only when `PIN_BUTTON_TURBO` is set to `-1` will the `T##` be removed from a connected display.
-// Please note that only when `PIN_SLIDER_LS` and  `PIN_SLIDER_RS` are set to `-1` will the button combo shortcut for DP/LS/RS work.
+// Please note that only when `PIN_SLIDER_ONE` and  `PIN_SLIDER_TWO` are set to `-1` will the button combo shortcut for DP/LS/RS work.
 // The buttons are listed in GP2040 configuration, beside each the listed order is *GP2040 / Xinput / Switch / PS3 / Directinput / Arcade*
 
 #define PIN_DPAD_UP     1           // UP
@@ -34,10 +34,13 @@
 #define PIN_BUTTON_R3   22          // R3 / RS / RS / R3 / 12 / RS
 #define PIN_BUTTON_A1   4           // A1 / Guide / Home / PS / 13 / ~
 #define PIN_BUTTON_A2   20          // A2 / ~ / Capture / ~ / 14 / ~
+#define PIN_BUTTON_FN   -1          // Hotkey Function
 #define PIN_BUTTON_TURBO 28         // Turbo
 #define PIN_BUTTON_REVERSE -1       // UDLR Reverse
-#define PIN_SLIDER_LS    -1         // Left Stick Slider
-#define PIN_SLIDER_RS    -1         // Right Stick Slider
+#define PIN_SLIDER_ONE    -1         // Left Stick Slider
+#define PIN_SLIDER_TWO    -1         // Right Stick Slider
+#define PIN_SLIDER_SOCD_ONE    -1         // SOCD Slider Pin One
+#define PIN_SLIDER_SOCD_TWO    -1         // SOCD Slider Pin Two
 
 
 // This is the SOCD section.
@@ -46,9 +49,18 @@
 // 1 - `SOCD_MODE_NEUTRAL` - This is a neutral SOCD.  EG. when you press `up` + `down` no input will be registered.
 // 2 - `SOCD_MODE_UP_PRIORITY` - This is up priority SOCD.  EG. when you press `up` + `down` `up` will be registered.
 // 3 - `SOCD_MODE_SECOND_INPUT_PRIORITY` - This is last priority SOCD.  EG. when you press and hold `up` then press `down` `down` will be registered.
+// 4 - `SOCD_MODE_FIRST_INPUT_PRIORITY` - This is first priority SOCD.  EG. when you press and hold `up` then press `down` `up` will be registered.
 
 #define DEFAULT_SOCD_MODE SOCD_MODE_NEUTRAL
+// SOCD Slider Slot Defaults
+#define SLIDER_SOCD_SLOT_ONE SOCD_MODE_UP_PRIORITY
+#define SLIDER_SOCD_SLOT_TWO  SOCD_MODE_SECOND_INPUT_PRIORITY
+#define SLIDER_SOCD_SLOT_DEFAULT SOCD_MODE_NEUTRAL
 
+#define DEFAULT_FORCED_SETUP_MODE FORCED_SETUP_MODE_OFF // 	FORCED_SETUP_MODE_OFF, FORCED_SETUP_MODE_LOCK_MODE_SWITCH, FORCED_SETUP_MODE_LOCK_WEB_CONFIG, FORCED_SETUP_MODE_LOCK_BOTH
+#define DEFAULT_LOCK_HOTKEYS false // or true
+
+#define DEFAULT_PS4CONTROLLER_TYPE PS4_CONTROLLER
 
 // This is the LEDs section.
 // The default `TURBO_LED_PIN` pin is set to `15` ( it is recommended to run through 3V3(OUT) with a resistor)
@@ -72,7 +84,6 @@
 // The default LEDS_[BUTTON] is an order and has nothing to do with what GPIO pin something is connected to.
 // Unless you are planning on running custom animations I would recommmend you leave this as is.
 
-#define TURBO_ENABLED 1
 #define TURBO_LED_PIN -1
 
 #define BOARD_LEDS_PIN 15
@@ -122,10 +133,17 @@
 // This is the Analog section.
 // In this section you can specify if Analog is enabled, and, if endabled, which pins will be used for it.
 // The default for `ANALOG_ADC_VRX` and `ANALOG_ADC_VRY` is `-1` which disables them.
-// To enable a `ANALOG_ADC_VRX` and `ANALOG_ADC_VRY`, replace the `-1` with the GPIO pin numbers that are desired.
+// To enable a `ANALOG_ADC_VRX` and `ANALOG_ADC_VRY`, replace the `-1` with the GPIO pin numbers that are desired. 
 
-#define ANALOG_ADC_VRX -1
-#define ANALOG_ADC_VRY -1
+#define ANALOG_ADC_1_VRX -1
+#define ANALOG_ADC_1_VRY -1
+#define ANALOG_ADC_1_MODE DPAD_MODE_LEFT_ANALOG
+#define ANALOG_ADC_1_INVERT INVERT_NONE
+
+#define ANALOG_ADC_2_VRX -1
+#define ANALOG_ADC_2_VRY -1
+#define ANALOG_ADC_2_MODE DPAD_MODE_RIGHT_ANALOG
+#define ANALOG_ADC_2_INVERT INVERT_NONE
 
 
 // This is the I2C Display section (commonly known as the OLED display section).
@@ -197,8 +215,8 @@
 
 #define BUTTON_LAYOUT BUTTON_LAYOUT_STICKLESS
 #define BUTTON_LAYOUT_RIGHT BUTTON_LAYOUT_STICKLESSB
-#define SPLASH_MODE NOSPLASH
-#define SPLASH_CHOICE MAIN
+#define SPLASH_MODE SPLASH_MODE_NONE
+#define SPLASH_CHOICE SPLASH_CHOICE_MAIN
 #define SPLASH_DURATION 7500 // Duration in milliseconds
 
 // Board LED Add-on Setting
@@ -207,7 +225,7 @@
 //                  on the current mode (config, normal, or no USB data)
 // INPUT_TEST     - Blinks whenever any input is made
 
-#define BOARD_LED_TYPE BOARD_LED_OFF
+#define BOARD_LED_TYPE ON_BOARD_LED_MODE_OFF
 
 // Dual Directional Add-on Options
 
@@ -221,17 +239,31 @@
 // BOOTSEL Button Add-on setting
 #define BOOTSEL_BUTTON_MASK 0 // 0 means none, get other mask from GamepadState.h
 
-// This is the Buzzer Speaker section.
-// In this section you can specify if Buzzer Speaker will be active, and, if active, which pin will be used for them.
-// The default is `BUZZER_ENABLED` which will turn the Buzzer Speaker off.
-// The default pin for Buzzer Speaker is `-1` which will turn the Buzzer Speaker off.
-// The default volume for Buzzer Speaker is 100 (max).
-#define BUZZER_ENABLED 0
-#define BUZZER_PIN -1
-#define BUZZER_VOLUME 100
-
 // Extra Button Add-on setting
 #define EXTRA_BUTTON_MASK 0 // 0 means none, get other mask from GamepadState.h
+                            // For directions, use GAMEPAD_MASK_DU, GAMEPAD_MASK_DD, GAMEPAD_MASK_DL and GAMEPAD_MASK_DR
 #define EXTRA_BUTTON_PIN -1
+
+// Keyboard Mapping Configuration
+// List of HID keycodes can be located here: https://github.com/hathach/tinyusb/blob/3623ba1884ddff23e9b64766cb6dd032f1425846/src/class/hid/hid.h#L356
+// Even for the modifier keys, HID_KEY entries should be used as the implementation expects those and will convert as necessary.
+#define KEY_DPAD_UP     HID_KEY_ARROW_UP      // UP
+#define KEY_DPAD_DOWN   HID_KEY_ARROW_DOWN    // DOWN
+#define KEY_DPAD_RIGHT  HID_KEY_ARROW_RIGHT   // RIGHT
+#define KEY_DPAD_LEFT   HID_KEY_ARROW_LEFT    // LEFT
+#define KEY_BUTTON_B1   HID_KEY_SHIFT_LEFT    // B1 / A / B / Cross / 2 / K1
+#define KEY_BUTTON_B2   HID_KEY_Z             // B2 / B / A / Circle / 3 / K2
+#define KEY_BUTTON_R2   HID_KEY_X             // R2 / RT / ZR / R2 / 8 / K3
+#define KEY_BUTTON_L2   HID_KEY_V             // L2 / LT / ZL / L2 / 7 / K4
+#define KEY_BUTTON_B3   HID_KEY_CONTROL_LEFT  // B3 / X / Y / Square / 1 / P1
+#define KEY_BUTTON_B4   HID_KEY_ALT_LEFT      // B4 / Y / X / Triangle / 4 / P2
+#define KEY_BUTTON_R1   HID_KEY_SPACE         // R1 / RB / R / R1 / 6 / P3
+#define KEY_BUTTON_L1   HID_KEY_C             // L1 / LB / L / L1 / 5 / P4
+#define KEY_BUTTON_S1   HID_KEY_5             // S1 / Back / Minus / Select / 9 / Coin
+#define KEY_BUTTON_S2   HID_KEY_1             // S2 / Start / Plus / Start / 10 / Start
+#define KEY_BUTTON_L3   HID_KEY_EQUAL         // L3 / LS / LS / L3 / 11 / LS
+#define KEY_BUTTON_R3   HID_KEY_MINUS         // R3 / RS / RS / R3 / 12 / RS
+#define KEY_BUTTON_A1   HID_KEY_9             // A1 / Guide / Home / PS / 13 / ~
+#define KEY_BUTTON_A2   HID_KEY_F2            // A2 / ~ / Capture / ~ / 14 / ~
 
 #endif
